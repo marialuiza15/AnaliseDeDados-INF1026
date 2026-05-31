@@ -1,34 +1,28 @@
-import kagglehub
-import pandas as pd
 import os
- 
+import pandas as pd
+
 DATASET = "utkarshxy/who-worldhealth-statistics-2020-complete"
- 
-# ─── Download do dataset completo para disco ──────────────────────────────────
-print("Baixando dataset da WHO...")
-path = kagglehub.dataset_download(DATASET)
-print(f"Dataset salvo em: {path}\n")
- 
-# ─── Leitura direta com pandas ────────────────────────────────────────────────
+DOWNLOAD_DIR = "./who_dataset"
+
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
+# Baixa o dataset via CLI do kaggle
+os.system(f"kaggle datasets download -d {DATASET} -p {DOWNLOAD_DIR} --unzip")
+
+# ─── Leitura dos arquivos ─────────────────────────────────────────────────────
 print("Carregando bases de dados...")
- 
-df_transito     = pd.read_csv(os.path.join(path, "roadTrafficDeaths.csv"))
-df_saude        = pd.read_csv(os.path.join(path, "uhcCoverage.csv"))
-df_expectativa  = pd.read_csv(os.path.join(path, "lifeExpectancyAtBirth.csv"))
-df_medicos      = pd.read_csv(os.path.join(path, "medicalDoctors.csv"))
-df_mortalidade  = pd.read_csv(os.path.join(path, "mortalityRatePoisoning.csv"))
- 
+
+df_transito    = pd.read_csv(os.path.join(DOWNLOAD_DIR, "roadTrafficDeaths.csv"))
+df_mortalidade = pd.read_csv(os.path.join(DOWNLOAD_DIR, "under5MortalityRate.csv"))
+
 print("Bases carregadas com sucesso!\n")
- 
+
 # ─── Inspeção inicial ─────────────────────────────────────────────────────────
 bases = {
-    "TRÂNSITO — roadTrafficDeaths.csv":           df_transito,
-    "COBERTURA DE SAÚDE — uhcCoverage.csv":       df_saude,
-    "EXPECTATIVA DE VIDA — lifeExpectancyAtBirth": df_expectativa,
-    "MÉDICOS — medicalDoctors.csv":               df_medicos,
-    "MORTALIDADE/ENVENENAMENTO — mortalityRatePoisoning": df_mortalidade,
+    "TRÂNSITO — roadTrafficDeaths.csv":          df_transito,
+    "MORTALIDADE <5 ANOS — under5MortalityRate": df_mortalidade,
 }
- 
+
 for titulo, df in bases.items():
     print("=" * 60)
     print(titulo)
@@ -36,4 +30,3 @@ for titulo, df in bases.items():
     print(f"Shape: {df.shape}")
     print(df.head())
     print(f"\nColunas: {df.columns.tolist()}\n")
- 

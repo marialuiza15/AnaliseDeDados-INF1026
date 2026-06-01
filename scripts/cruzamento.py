@@ -10,3 +10,8 @@
 
 #  com contagem no cruzamento
 #  com medida de outra variável no cruzamento
+
+# Cruzamento (crosstab)
+# Você cruza duas (ou mais) variáveis em formato de tabela bidimensional — linhas vs. colunas. É uma tabela de dupla entrada
+
+# Analogia: o agrupamento é como uma lista resumida; o cruzamento é como uma planilha de dupla entrada — você enxerga a relação entre duas variáveis de uma vez só.

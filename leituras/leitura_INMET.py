@@ -1,8 +1,7 @@
 import pandas as pd
 import os
 from pathlib import Path
-
-inmet_path = 'dados/INMET/'
+from constants import *
 
 dfs_lista = []
 
@@ -17,20 +16,18 @@ def junta_clima():
             else:
                 regiao = nome_sem_extensao  
             
-            # Ler o arquivo CSV
             caminho_completo = os.path.join(inmet_path, arquivo)
             try:
                 df = pd.read_csv(caminho_completo, sep=';')
-                # Remove coluna vazia (Unnamed) se existir
+
                 df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-                # Adicionar coluna Regiao
+
                 df['Regiao'] = regiao
                 dfs_lista.append(df)
                 print(f'Lido: {arquivo} ({len(df)} linhas) - Região: {regiao}')
             except Exception as e:
                 print(f'Erro ao ler {arquivo}: {e}')
 
-    # Concatenar todos os dataframes em um único
     if dfs_lista:
         df_completo = pd.concat(dfs_lista, ignore_index=True)
         print(f'\nDataFrame consolidado: {len(df_completo)} linhas e {len(df_completo.columns)} colunas')

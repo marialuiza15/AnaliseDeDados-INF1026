@@ -1,7 +1,7 @@
-import pandas as pd
-import os
 from pathlib import Path
 from constants import *
+import pandas as pd
+import os
 
 dfs_lista = []
 
@@ -19,20 +19,19 @@ def junta_clima():
             caminho_completo = os.path.join(inmet_path, arquivo)
             try:
                 df = pd.read_csv(caminho_completo, sep=';')
-                # Remove coluna vazia (Unnamed) se existir
+
                 df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-                # Adicionar coluna Regiao
+
                 df['Regiao'] = regiao
                 dfs_lista.append(df)
                 print(f'Lido: {arquivo} ({len(df)} linhas) - Região: {regiao}')
             except Exception as e:
                 print(f'Erro ao ler {arquivo}: {e}')
 
-    # Concatenar todos os dataframes em um único
     if dfs_lista:
         df_completo = pd.concat(dfs_lista, ignore_index=True)
-        print(f'\nDataFrame consolidado: {len(df_completo)} linhas e {len(df_completo.columns)} colunas')
-        print(f'Regiões: {df_completo["Regiao"].nunique()} diferentes')
+        print(f'\nDataFrame INMET consolidado: {len(df_completo)} linhas e {len(df_completo.columns)} colunas')
+
     else:
         print('Nenhum arquivo CSV encontrado na pasta INMET.')
 

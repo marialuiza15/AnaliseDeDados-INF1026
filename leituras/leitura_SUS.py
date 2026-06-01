@@ -1,17 +1,27 @@
+from pathlib import Path
 from constants import *
 import pandas as pd
 import os
-from pathlib import Path
-
-
-dfs_lista = []
 
 def junta_sus():
+    """
+    Lê arquivos CSV de dados de saúde (SUS) da pasta dados/SUS/
+    """
+    df_completo = None
+    dfs_lista = []
+    
+    # Verificar se a pasta existe
+    if not os.path.exists(saude_path):
+        print(f'Pasta {saude_path} não encontrada.')
+        return None
+    
     for arquivo in sorted(os.listdir(saude_path)):
         if arquivo.endswith('.csv'):
             caminho_completo = os.path.join(saude_path, arquivo)
             try:
                 df = pd.read_csv(caminho_completo, sep=';')
+                # Remove colunas vazias (Unnamed)
+                df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
                 dfs_lista.append(df)
                 print(f'Lido: {arquivo} ({len(df)} linhas)')
             except Exception as e:
@@ -19,8 +29,8 @@ def junta_sus():
 
     if dfs_lista:
         df_completo = pd.concat(dfs_lista, ignore_index=True)
-        print(f'\nDataFrame consolidado: {len(df_completo)} linhas e {len(df_completo.columns)} colunas')
+        print(f'\nDataFrame SUS consolidado: {len(df_completo)} linhas e {len(df_completo.columns)} colunas')
+        return df_completo
     else:
         print('Nenhum arquivo CSV encontrado na pasta SUS.')
-
-    return df_completo
+        return None

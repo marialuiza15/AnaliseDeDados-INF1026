@@ -1,8 +1,7 @@
 import pandas as pd
 import os
 from pathlib import Path
-
-inmet_path = 'dados/INMET/'
+from constants import *
 
 dfs_lista = []
 
@@ -17,7 +16,6 @@ def junta_clima():
             else:
                 regiao = nome_sem_extensao  
             
-            # Ler o arquivo CSV
             caminho_completo = os.path.join(inmet_path, arquivo)
             try:
                 df = pd.read_csv(caminho_completo, sep=';')

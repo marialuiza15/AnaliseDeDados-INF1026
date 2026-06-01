@@ -1,1 +1,2 @@
 dados/SUS/DO24OPEN.csv filter=lfs diff=lfs merge=lfs -text
+dados/SUS/SUS.csv filter=lfs diff=lfs merge=lfs -text

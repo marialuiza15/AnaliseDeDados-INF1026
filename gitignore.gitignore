@@ -3,8 +3,11 @@ venv/
 .env/
 .venv/
 
+.dll
+
 __pycache__/
 *.py[cod]
 *$py.class
 
+.pyc
 .vscode/

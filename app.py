@@ -35,4 +35,4 @@ for col in X.columns:
     X[col] = le[col].transform(X[col])
 
 pred = modelo.predict(X)
-st.success(f"⚠️ Risco previsto: {le['risco_obito'].inverse_transform(pred)[0]}")
+st.success(f"Risco previsto: {le['risco_obito'].inverse_transform(pred)[0]}")

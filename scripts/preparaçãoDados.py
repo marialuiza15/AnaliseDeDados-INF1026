@@ -44,8 +44,30 @@ def limpar_saude(df):
         'co_municipio_ibge_residencia', 'co_cid_causa_basica',
         'categoria_cid_causa_basica'
     ]
-    df = df[colunas_utilizadas].dropna()
-    return df
+    df = df[colunas_utilizadas].copy()
+
+    # Preencher valores numéricos por média do grupo (município)
+    df['nu_idade'] = df.groupby('co_municipio_ibge_residencia')['nu_idade'].transform(
+        lambda x: x.fillna(x.mean())
+    )
+    df['nu_idade'] = df['nu_idade'].fillna(df['nu_idade'].mean())
+
+    # Preencher valores categóricos pelo valor mais frequente do grupo (município)
+    mode_por_municipio = (
+        df.groupby('co_municipio_ibge_residencia')['tp_raca_cor']
+          .agg(lambda x: x.mode().iloc[0] if not x.mode().empty else pd.NA)
+    )
+    df['tp_raca_cor'] = df.apply(
+        lambda row: row['tp_raca_cor']
+        if pd.notna(row['tp_raca_cor'])
+        else mode_por_municipio.loc[row['co_municipio_ibge_residencia']],
+        axis=1
+    )
+    df['tp_raca_cor'] = df['tp_raca_cor'].fillna(
+        df['tp_raca_cor'].mode().iloc[0] if not df['tp_raca_cor'].mode().empty else ''
+    )
+
+    return df.dropna()
 
 
 def unir_e_separar_clima(caminho_clima):
@@ -79,7 +101,7 @@ def unir_e_separar_clima(caminho_clima):
         df['data'] = pd.to_datetime(df['Data Medicao'], errors='coerce')
         dfs.append(df)
 
-    clima_total = pd.concat(dfs, ignore_index=True)
+    clima_total = pd.concat(dfs, ignore_index=True) #Concatenação
 
     # Separa por ano
     dfs_por_ano = {}
@@ -112,7 +134,7 @@ def unindo_clima_saude(df_clima_ano, caminho_saude, ano_especifico):
         .str.strip()
         .replace('nan', '', regex=False)
         .apply(lambda value: unidecode.unidecode(value) if isinstance(value, str) and value else value)
-    )
+    ) #Substituição/alteração
     df_merged = pd.merge(df_clima_ano, df_saude, on=['data', 'Região'], how='inner', suffixes=('_clima', '_saude'))
 
     return df_merged

@@ -19,7 +19,7 @@ def junta_sus():
         if arquivo.endswith('.csv'):
             caminho_completo = os.path.join(saude_path, arquivo)
             try:
-                df = pd.read_csv(caminho_completo, sep=';')
+                df = pd.read_csv(caminho_completo,sep=';',dtype=str,low_memory=False)
                 # Remove colunas vazias (Unnamed)
                 df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
                 dfs_lista.append(df)

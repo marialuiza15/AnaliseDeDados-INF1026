@@ -14,13 +14,13 @@ df_saude = junta_sus()
 df_ibge["UF"] = "RJ"
 
 print("\nColunas INMET:")
-print(df_clima.columns.tolist())
+print(df_clima.head(1))
 
 print("\nColunas IBGE:")
-print(df_ibge.columns.tolist())
+print(df_ibge.head(1))
 
 print("\nColunas SUS:")
-print(df_saude.columns.tolist())
+print(df_saude.head(1))
 
 
 depara_inmet_ibge_sus = criar_depara_inmet_ibge_sus(
@@ -61,7 +61,7 @@ print("\nDe/para criado:", depara_inmet_ibge_sus.shape)
 print("Base SUS com INMET:", df_saude_com_inmet.shape)
 
 print("\nColunas do de/para:")
-print(depara_inmet_ibge_sus.columns.tolist())
+print(depara_inmet_ibge_sus.head(1))
 
 print("\nPrévia do de/para:")
 print(depara_inmet_ibge_sus.head(20))

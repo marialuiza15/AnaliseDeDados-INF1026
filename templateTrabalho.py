@@ -399,9 +399,9 @@ print(dfINMET_copy_g.sort_values('municipio_inmet'))
 # # QUESTÃO 3 — Perfil de mortalidade
 # # =============================================================================
 
-# print('\n==============================================')
-# print('Questão 3 — Perfil de mortalidade')
-# print('==============================================')
+print('\n==============================================')
+print('Questão 3 — Perfil de mortalidade')
+print('==============================================')
 
 
 # # -----------------------------------------------------------------------------
@@ -418,9 +418,20 @@ print(dfINMET_copy_g.sort_values('municipio_inmet'))
 # #      Faça um gráfico de barras verticais com a frequência de FAIXA_ETARIA.
 # # -----------------------------------------------------------------------------
 
-# print('\n3.a — FAIXA_ETARIA com pd.cut')
+print('\n3.a — FAIXA_ETARIA com pd.cut')
+# SEU CÓDIGO AQUI
 
-# # SEU CÓDIGO AQUI
+bins = [0,14,29,59,79,120]
+labels = ['Criança/Adolescente','Jovem','Adulto','Idoso','Muito idoso']
+
+dfSUS['FAIXA_ETARIA'] = pd.cut(dfSUS['IDADE_ANOS'], bins=bins, labels=labels)
+
+freq = dfSUS['FAIXA_ETARIA'].value_counts()
+
+freq.plot(kind='bar')
+plt.show()
+
+print(freq)
 
 
 # # -----------------------------------------------------------------------------
@@ -440,10 +451,29 @@ print(dfINMET_copy_g.sort_values('municipio_inmet'))
 # #      com totais de linha e coluna (margins=True).
 # # -----------------------------------------------------------------------------
 
-# print('\n3.b — GRUPO_CAUSA e crosstab por sexo')
+print('\n3.b — GRUPO_CAUSA e crosstab por sexo')
+# SEU CÓDIGO AQUI
 
-# # SEU CÓDIGO AQUI
+def classifica_causa(cid):
+    c = cid[0]
+    if c=='I':
+        return 'Doenças circulatórias'
+    elif c=='J':
+        return 'Doenças respiratórias'
+    elif c=='C' or c=='D':
+        return 'Neoplasias'
+    elif c=='V' or c=='W' or c=='X' or c=='Y':
+        return 'Causas externas'
+    elif c=='U':
+        return 'COVID-19'
+    else:
+        return 'Outras causas'
 
+dfSUS['GRUPO_CAUSA'] = dfSUS['CAUSABAS'].apply(classifica_causa)
+
+df = pd.crosstab(dfSUS['GRUPO_CAUSA'], dfSUS['SEXO_DESC'])
+
+print(df.head(3))
 
 # # -----------------------------------------------------------------------------
 # # 3.c) Filtrando apenas óbitos NÃO FETAIS (TIPOBITO == '2'):
@@ -458,18 +488,35 @@ print(dfINMET_copy_g.sort_values('municipio_inmet'))
 # #             ordenada da maior para a menor média.
 # # -----------------------------------------------------------------------------
 
-# print('\n3.c — Causas, local e idade nos óbitos não fetais')
+print('\n3.c — Causas, local e idade nos óbitos não fetais')
+# SEU CÓDIGO AQUI
 
-# # SEU CÓDIGO AQUI
+cond = dfSUS['TIPOBITO'] == '2'
 
+df_naofetais = dfSUS.loc[cond]
+
+top10_causabas_freqAbs = df_naofetais['CAUSABAS'].value_counts().head(10)
+top10_causabas_freqRel = top10_causabas_freqAbs/top10_causabas_freqAbs.sum() * 100
+print(top10_causabas_freqAbs , top10_causabas_freqRel)
+
+dist_local = df_naofetais['LOCAL_DESC'].value_counts()
+
+dist_local.plot(kind='bar')
+plt.show()
+
+df = dfSUS.groupby('LOCAL_DESC').agg({
+    'IDADE_ANOS': 'mean'
+}).sort_values(by='IDADE_ANOS', ascending=False)
+
+print(df)
 
 # # =============================================================================
 # # QUESTÃO 4 — Integração entre bases de dados
 # # =============================================================================
 
-# print('\n==============================================')
-# print('Questão 4 — Integração entre bases de dados')
-# print('==============================================')
+print('\n==============================================')
+print('Questão 4 — Integração entre bases de dados')
+print('==============================================')
 
 
 # # -----------------------------------------------------------------------------
@@ -490,10 +537,21 @@ print(dfINMET_copy_g.sort_values('municipio_inmet'))
 # #      e quantas ficaram sem correspondência.
 # # -----------------------------------------------------------------------------
 
-# print('\n4.a — Merge dfSUS + dfIBGE por código de município')
+print('\n4.a — Merge dfSUS + dfIBGE por código de município')
+# SEU CÓDIGO AQUI
 
-# # SEU CÓDIGO AQUI
+dfIBGE['Código Município Completo'] = dfIBGE['Código Município Completo'].astype('float').astype('Int64')
 
+dfIBGE['cod_6dig'] = dfIBGE['Código Município Completo'] // 10
+
+dfSUS['CODMUNRES'] = dfSUS['CODMUNRES'].astype('float').astype('Int64')
+
+dfMerge = pd.merge(dfSUS, dfIBGE, left_on='CODMUNRES', right_on='cod_6dig', how='left')
+
+qtd_null = dfMerge['Nome_Município'].isnull().sum()
+qtd_notnull = dfMerge['Nome_Município'].notnull().sum()
+
+print(qtd_null, qtd_notnull)
 
 # # -----------------------------------------------------------------------------
 # # 4.b) Usando dfMerge, agrupe por Nome_Município e calcule, em um único .agg():
@@ -505,34 +563,61 @@ print(dfINMET_copy_g.sort_values('municipio_inmet'))
 # #      Mostre os 15 municípios com mais óbitos.
 # # -----------------------------------------------------------------------------
 
-# print('\n4.b — Óbitos, causa mais frequente e idade média por município')
+print('\n4.b — Óbitos, causa mais frequente e idade média por município')
+# SEU CÓDIGO AQUI
 
-# # SEU CÓDIGO AQUI
+dfMerge['DTOBITO'] = pd.to_datetime(dfMerge['DTOBITO'], format='%d%m%Y')
 
+dfMerge_ag = dfMerge.groupby('Nome_Município').agg({
+    'DTOBITO': 'mean',
+    'GRUPO_CAUSA': pd.Series.mode,
+    'IDADE_ANOS': 'mean',
+    'CODMUNRES': 'count'
+})
+
+dfMerge_ag_ord = dfMerge_ag.sort_values('CODMUNRES', ascending=False).head(15)
+
+print(dfMerge_ag_ord)
 
 # # -----------------------------------------------------------------------------
 # # 4.c) Em dfINMET, o campo municipio_inmet contém o nome do município da estação.
 # #
-# #      Crie dfClimaUF agrupando dfINMET por UF:
+# #      Crie dfClimaMun agrupando dfINMET por municipio_inmet:
 # #          - média de temperatura
 # #          - total de precipitação
 # #          - média de umidade
 # #
-# #      Crie dfMortalidadeUF agrupando dfMerge pela coluna 'UF' do IBGE
-# #      (coluna 'UF_y' se surgir sufixo, ajuste conforme necessário):
+# #      Crie dfMortalidademunicipio_inmet agrupando dfMerge pela coluna 'municipio_inmet' do IBGE
+# #      (coluna 'municipio_inmet_y' se surgir sufixo, ajuste conforme necessário):
 # #          - total de óbitos (count de DTOBITO)
 # #          - média de IDADE_ANOS
 # #
-# #      Concatene dfClimaUF e dfMortalidadeUF (axis=1, usando o índice UF).
-# #      Armazene em dfUF.
-# #      Mostre dfUF completo.
+# #      Concatene dfClimaMun e dfMortalidademunicipio_inmet (axis=1, usando o índice municipio_inmet).
+# #      Armazene em dfmunicipio_inmet
+# #      Mostre dfmunicipio_inmet completo.
 # # -----------------------------------------------------------------------------
 
-# print('\n4.c — Integração clima x mortalidade por UF')
+print('\n4.c — Integração clima x mortalidade por UF')
+# SEU CÓDIGO AQUI
 
-# # SEU CÓDIGO AQUI
+dfINMET['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'] = dfINMET['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'].replace(',','.', regex=True).astype('float')
+dfINMET['TEMPERATURA MEDIA, DIARIA (AUT)(°C)'] = dfINMET['TEMPERATURA MEDIA, DIARIA (AUT)(°C)'].replace(',','.', regex=True).astype('float')
+dfINMET['UMIDADE RELATIVA DO AR, MEDIA DIARIA (AUT)(%)'] = dfINMET['UMIDADE RELATIVA DO AR, MEDIA DIARIA (AUT)(%)'].replace(',','.', regex=True).astype('float')
 
+dfClimaMun = dfINMET.groupby('municipio_inmet').agg({
+    'PRECIPITACAO TOTAL, DIARIO (AUT)(mm)': 'mean',
+    'TEMPERATURA MEDIA, DIARIA (AUT)(°C)': 'sum',
+    'UMIDADE RELATIVA DO AR, MEDIA DIARIA (AUT)(%)' : 'mean'
+})
 
+dfMortalidademunicipio_inmet = dfMerge.groupby('municipio_inmet').agg({
+    'DTOBITO': 'count',
+    'IDADE_ANOS': 'mean'
+})
+
+dfmunicipio_inmet = pd.concat([dfClimaMun, dfMortalidademunicipio_inmet], axis=1)
+
+print(dfmunicipio_inmet)
 # # =============================================================================
 # # QUESTÃO 5 — Categorias de precipitação e indicador de vulnerabilidade climática
 # # =============================================================================

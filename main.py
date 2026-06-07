@@ -49,6 +49,7 @@ depara_inmet_ibge_sus = criar_depara_inmet_ibge_sus(
     coluna_codigo_ibge="Código Município Completo"
 )
 
+
 df_saude_com_inmet = cruzar_sus_com_inmet(
     df_sus=df_saude,
     depara=depara_inmet_ibge_sus,

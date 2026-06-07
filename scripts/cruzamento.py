@@ -1,232 +1,121 @@
-# Cruzamentos (mínimo 4)
-
 import pandas as pd
-import unicodedata
 
 
-def normalizar_texto(valor):
+def normaliza_municipio(serie):
+    """Remove acentos, espaços e padroniza para maiúsculo."""
+    return (
+        serie.astype(str)
+             .str.normalize("NFKD")
+             .str.encode("ascii", errors="ignore")
+             .str.decode("utf-8")
+             .str.strip()
+             .str.upper()
+    )
+
+
+def conectar_sus_inmet_via_ibge(df_sus, df_ibge, df_inmet,
+                                 coluna_cod_sus="CODMUNRES"):
     """
-    Padroniza textos para facilitar cruzamentos:
-    - remove acentos
-    - tira espaços extras
-    - deixa tudo em maiúsculo
-    """
-    if pd.isna(valor):
-        return None
+    Conecta as três bases com o IBGE como ponte:
 
-    valor = str(valor).strip().upper()
-    valor = unicodedata.normalize("NFKD", valor)
-    valor = "".join(c for c in valor if not unicodedata.combining(c))
+        SUS ──(código 6 dig)──► IBGE ──(nome + UF)──► INMET
 
-    return valor
+    Parâmetros
+    ----------
+    df_sus         : registros de óbito (SIM)
+    df_ibge        : cadastro municipal do IBGE
+    df_inmet       : medições meteorológicas do INMET
+    coluna_cod_sus : coluna do SUS com código do município
+                     use 'CODMUNRES'  para município de residência
+                     use 'CODMUNOCOR' para município de ocorrência
 
-
-def verificar_colunas(df, colunas, nome_base):
-    """
-    Verifica se as colunas necessárias existem no DataFrame.
-    Se alguma não existir, mostra as colunas disponíveis.
-    """
-    colunas_faltando = [coluna for coluna in colunas if coluna not in df.columns]
-
-    if colunas_faltando:
-        raise KeyError(
-            f"\nColunas não encontradas na base {nome_base}: {colunas_faltando}\n"
-            f"Colunas disponíveis em {nome_base}:\n{df.columns.tolist()}"
-        )
-
-
-def criar_depara_inmet_ibge_sus(
-    df_inmet,
-    df_ibge,
-    coluna_municipio_inmet,
-    coluna_uf_inmet,
-    coluna_codigo_inmet,
-    coluna_municipio_ibge="Nome_Município",
-    coluna_uf_ibge="UF",
-    coluna_codigo_ibge="Código Município Completo"
-):
-    """
-    Cria uma tabela de/para entre:
-    INMET -> município/estação
-    IBGE  -> município/código oficial
-    SUS   -> código municipal usado na base de óbitos
+    Retorna
+    -------
+    DataFrame com cada registro do SUS enriquecido com:
+      - Nome_Município e UF             (IBGE)
+      - municipio_inmet                 (INMET)
+      - Data Medicao                    (INMET)
+      - temp_media, precip_total,
+        umidade_media                   (INMET — por município e data)
     """
 
+    sus   = df_sus.copy()
+    ibge  = df_ibge.copy()
     inmet = df_inmet.copy()
-    ibge = df_ibge.copy()
 
-    verificar_colunas(
-        inmet,
-        [coluna_municipio_inmet, coluna_uf_inmet, coluna_codigo_inmet],
-        "INMET"
+    # ── PASSO 1: preparar IBGE ───────────────────────────────────────────
+    # 7 dígitos → 6 dígitos (remove o dígito verificador)
+    ibge["cod_6dig"] = (
+        ibge["Código Município Completo"]
+        .astype(str).str.replace(".0", "", regex=False)
+        .str.zfill(7).str[:6]
+        .astype(int)
+    )
+    ibge["municipio_norm"] = normaliza_municipio(ibge["Nome_Município"])
+
+    if "UF" not in ibge.columns:
+        ibge["UF"] = "RJ"
+    else:
+        ibge["UF"] = ibge["UF"].str.strip().str.upper()
+
+    # ── PASSO 2: preparar INMET com datas e valores numéricos ────────────
+    inmet["municipio_norm"] = normaliza_municipio(inmet["municipio_inmet"])
+    inmet["UF"]             = inmet["UF"].str.strip().str.upper()
+
+    inmet["Data Medicao"] = pd.to_datetime(inmet["Data Medicao"], errors="coerce")
+    inmet["Data Medicao_date"] = inmet["Data Medicao"].dt.normalize()
+
+    inmet["temp_float"] = (
+        inmet["TEMPERATURA MEDIA, DIARIA (AUT)(°C)"]
+        .astype(str).str.replace(",", ".")
+        .pipe(pd.to_numeric, errors="coerce")
+    )
+    inmet["precip_float"] = pd.to_numeric(
+        inmet["PRECIPITACAO TOTAL, DIARIO (AUT)(mm)"], errors="coerce"
+    )
+    inmet["umidade_float"] = pd.to_numeric(
+        inmet["UMIDADE RELATIVA DO AR, MEDIA DIARIA (AUT)(%)"], errors="coerce"
     )
 
-    verificar_colunas(
-        ibge,
-        [coluna_municipio_ibge, coluna_uf_ibge, coluna_codigo_ibge],
-        "IBGE"
-    )
-
-    inmet = inmet[
-        [
-            coluna_codigo_inmet,
-            coluna_municipio_inmet,
-            coluna_uf_inmet
-        ]
-    ].drop_duplicates()
-
-    inmet["municipio_norm"] = inmet[coluna_municipio_inmet].apply(normalizar_texto)
-    ibge["municipio_norm"] = ibge[coluna_municipio_ibge].apply(normalizar_texto)
-
-    inmet[coluna_uf_inmet] = (
-        inmet[coluna_uf_inmet]
-        .astype(str)
-        .str.strip()
-        .str.upper()
-    )
-
-    ibge[coluna_uf_ibge] = (
-        ibge[coluna_uf_ibge]
-        .astype(str)
-        .str.strip()
-        .str.upper()
-    )
-
-    ibge[coluna_codigo_ibge] = (
-        ibge[coluna_codigo_ibge]
-        .astype(str)
-        .str.strip()
-        .str.replace(".0", "", regex=False)
-        .str.zfill(7)
-    )
-
-    ibge["codigo_municipio_sus"] = ibge[coluna_codigo_ibge].str[:6]
-
-    ibge_reduzido = ibge[
-        [
-            "municipio_norm",
-            coluna_uf_ibge,
-            coluna_municipio_ibge,
-            coluna_codigo_ibge,
-            "codigo_municipio_sus"
-        ]
-    ].drop_duplicates()
-
-    depara = inmet.merge(
-        ibge_reduzido,
-        left_on=["municipio_norm", coluna_uf_inmet],
-        right_on=["municipio_norm", coluna_uf_ibge],
-        how="left",
-        suffixes=("_inmet", "_ibge")
-    )
-
-    depara = depara.rename(columns={
-        coluna_codigo_inmet: "codigo_local_inmet",
-        coluna_municipio_inmet: "municipio_inmet",
-        coluna_uf_inmet: "uf_inmet",
-        coluna_municipio_ibge: "nome_municipio_ibge",
-        coluna_uf_ibge: "uf_ibge",
-        coluna_codigo_ibge: "codigo_municipio_ibge_7"
-    })
-
-    colunas_finais = [
-        "codigo_local_inmet",
-        "municipio_inmet",
-        "uf_inmet",
-        "nome_municipio_ibge",
-        "uf_ibge",
-        "codigo_municipio_ibge_7",
-        "codigo_municipio_sus"
-    ]
-
-    colunas_finais = [
-        coluna for coluna in colunas_finais
-        if coluna in depara.columns
-    ]
-
-    depara = depara[colunas_finais].drop_duplicates()
-
-    return depara
-
-
-def cruzar_sus_com_inmet(
-    df_sus,
-    depara,
-    coluna_sus="CODMUNOCOR"
-):
-    """
-    Junta a base SUS com o código/local do INMET usando o código do município.
-
-    coluna_sus pode ser:
-    - CODMUNOCOR: município onde ocorreu o óbito
-    - CODMUNRES: município de residência da pessoa
-
-    Importante:
-    Se um município tiver mais de uma estação INMET, esta função mantém
-    apenas uma estação por município para não duplicar os registros do SUS.
-    """
-
-    sus = df_sus.copy()
-    depara_aux = depara.copy()
-
-    verificar_colunas(
-        sus,
-        [coluna_sus],
-        "SUS"
-    )
-
-    verificar_colunas(
-        depara_aux,
-        ["codigo_municipio_sus", "codigo_local_inmet"],
-        "DEPARA INMET-IBGE-SUS"
-    )
-
-    sus[coluna_sus] = (
-        sus[coluna_sus]
-        .astype(str)
-        .str.strip()
-        .str.replace(".0", "", regex=False)
-        .str[:6]
-    )
-
-    depara_aux["codigo_municipio_sus"] = (
-        depara_aux["codigo_municipio_sus"]
-        .astype(str)
-        .str.strip()
-        .str.replace(".0", "", regex=False)
-        .str[:6]
-    )
-
-    colunas_para_trazer = [
-        "codigo_municipio_sus",
-        "codigo_local_inmet",
-        "municipio_inmet",
-        "uf_inmet",
-        "nome_municipio_ibge"
-    ]
-
-    colunas_para_trazer = [
-        coluna for coluna in colunas_para_trazer
-        if coluna in depara_aux.columns
-    ]
-
-    depara_aux = depara_aux[colunas_para_trazer].drop_duplicates()
-
-    depara_aux = depara_aux[
-        depara_aux["codigo_municipio_sus"].notna()
-    ]
-
-    depara_aux = depara_aux.sort_values("codigo_local_inmet")
-    depara_aux = depara_aux.drop_duplicates(
-        subset=["codigo_municipio_sus"],
-        keep="first"
-    )
-
-    resultado = sus.merge(
-        depara_aux,
-        left_on=coluna_sus,
-        right_on="codigo_municipio_sus",
+    inmet = inmet.merge(
+        ibge[["cod_6dig", "municipio_norm", "UF", "Nome_Município"]],
+        on=["municipio_norm", "UF"],
         how="left"
     )
 
-    return resultado
+    inmet_por_dia = (
+        inmet
+        .groupby(["cod_6dig", "Data Medicao_date", "municipio_inmet", "UF", "Nome_Município"], as_index=False)
+        .agg(
+            **{"Data Medicao": ("Data Medicao", "first")},
+            temp_media         = ("temp_float", "mean"),
+            precip_total       = ("precip_float", "sum"),
+            umidade_media      = ("umidade_float", "mean"),
+        )
+    )
+
+    # ── PASSO 3: preparar SUS com data do óbito ──────────────────────────
+    sus["cod_municipio_6dig"] = (
+        sus[coluna_cod_sus]
+        .astype(str).str.replace(".0", "", regex=False)
+        .str[:6]
+        .pipe(pd.to_numeric, errors="coerce")
+        .astype("Int64")
+    )
+
+    sus["DTOBITO"] = pd.to_datetime(sus["DTOBITO"], format="%d%m%Y", errors="coerce")
+    sus["DTOBITO_date"] = sus["DTOBITO"].dt.normalize()
+
+    # ── PASSO 4: SUS × INMET por código de município e data ─────────────
+    df_completo = sus.merge(
+        inmet_por_dia[[
+            "cod_6dig", "Data Medicao", "Data Medicao_date",
+            "municipio_inmet", "UF",
+            "temp_media", "precip_total", "umidade_media"
+        ]],
+        left_on=["cod_municipio_6dig", "DTOBITO_date"],
+        right_on=["cod_6dig", "Data Medicao_date"],
+        how="left"
+    )
+
+    return df_completo

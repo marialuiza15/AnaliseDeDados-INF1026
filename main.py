@@ -14,13 +14,25 @@ df_saude = junta_sus()
 df_ibge["UF"] = "RJ"
 
 print("\nColunas INMET:")
-print(df_clima.head(1))
+print(df_clima.head(1), 
+      "\nColunas do clima INMET:", df_clima.columns.tolist(), 
+      "\nTotal de linhas INMET:", len(df_clima), 
+      "\nTotal de estações INMET:", df_clima["codigo_estacao_inmet"].nunique(),
+      "\nTotal de municípios INMET:", df_clima["municipio_inmet"].nunique(),
+      "\nLista de municípios INMET:", df_clima["municipio_inmet"].drop_duplicates().tolist())
+
 
 print("\nColunas IBGE:")
-print(df_ibge.head(1))
+print(df_ibge.head(1), 
+      "\nColunas do IBGE:", df_ibge.columns.tolist(), 
+      "\nTotal de linhas IBGE:", len(df_ibge), 
+      "\nTotal de municípios IBGE:", df_ibge["Código Município Completo"].nunique())
 
 print("\nColunas SUS:")
-print(df_saude.head(1))
+print(df_saude.head(1), 
+      "\nColunas do SUS:", df_saude.columns.tolist(), 
+      "\nTotal de linhas SUS:", len(df_saude), 
+      "\nTotal de municípios SUS:", df_saude["CODMUNOCOR"].nunique())
 
 
 depara_inmet_ibge_sus = criar_depara_inmet_ibge_sus(
@@ -57,31 +69,31 @@ df_saude_com_inmet.to_csv(
     encoding="utf-8-sig"
 )
 
-print("\nDe/para criado:", depara_inmet_ibge_sus.shape)
-print("Base SUS com INMET:", df_saude_com_inmet.shape)
+# print("\nDe/para criado:", depara_inmet_ibge_sus.shape)
+# print("Base SUS com INMET:", df_saude_com_inmet.shape)
 
-print("\nColunas do de/para:")
-print(depara_inmet_ibge_sus.head(1))
+# print("\nColunas do de/para:")
+# print(depara_inmet_ibge_sus.head(1))
 
-print("\nPrévia do de/para:")
-print(depara_inmet_ibge_sus.head(20))
+# print("\nPrévia do de/para:")
+# print(depara_inmet_ibge_sus.head(20))
 
-print("\nTotal de linhas SUS com INMET:")
-print(len(df_saude_com_inmet))
+# print("\nTotal de linhas SUS com INMET:")
+# print(len(df_saude_com_inmet))
 
-print("\nLinhas com código INMET:")
-print(df_saude_com_inmet["codigo_local_inmet"].notna().sum())
+# print("\nLinhas com código INMET:")
+# print(df_saude_com_inmet["codigo_local_inmet"].notna().sum())
 
-print("\nLinhas sem código INMET:")
-print(df_saude_com_inmet["codigo_local_inmet"].isna().sum())
+# print("\nLinhas sem código INMET:")
+# print(df_saude_com_inmet["codigo_local_inmet"].isna().sum())
 
-print("\nPercentual com código INMET:")
-print(df_saude_com_inmet["codigo_local_inmet"].notna().mean() * 100)
+# print("\nPercentual com código INMET:")
+# print(df_saude_com_inmet["codigo_local_inmet"].notna().mean() * 100)
 
-print("\nMunicípios SUS sem correspondência INMET:")
-print(
-    df_saude_com_inmet.loc[
-        df_saude_com_inmet["codigo_local_inmet"].isna(),
-        "CODMUNOCOR"
-    ].drop_duplicates().head(30)
-)
+# print("\nMunicípios SUS sem correspondência INMET:")
+# print(
+#     df_saude_com_inmet.loc[
+#         df_saude_com_inmet["codigo_local_inmet"].isna(),
+#         "CODMUNOCOR"
+#     ].drop_duplicates().head(30)
+# )

@@ -1,7 +1,7 @@
 import pandas as pd
 
-arquivo_entrada = r"C:\Users\user\Desktop\PYTHON\AnaliseDeDados-INF1026\dados\SUS\DO24OPEN.csv"
-arquivo_saida = r"C:\Users\user\Desktop\PYTHON\AnaliseDeDados-INF1026\dados\SUS\DO24OPEN_RJ_RES_OU_OCOR.csv"
+arquivo_entrada = r"/workspaces/AnaliseDeDados-INF1026/dados/SUS/DO24OPEN_RJ_RES_OU_OCOR.csv"
+arquivo_saida = r"/workspaces/AnaliseDeDados-INF1026/dados/SUS/DO24OPEN_RJ_OCOR.csv"
 
 primeiro_chunk = True
 total_linhas = 0
@@ -22,7 +22,6 @@ for chunk in pd.read_csv(
 
     # Filtro: residente no RJ OU óbito ocorrido no RJ
     filtro_rj = (
-        chunk["CODMUNRES"].str.startswith("33", na=False) |
         chunk["CODMUNOCOR"].str.startswith("33", na=False)
     )
 

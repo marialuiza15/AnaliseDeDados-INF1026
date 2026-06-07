@@ -254,3 +254,67 @@ print("Municípios com maior proporção de dias de chuva forte ou muito forte:\
 # 7- Municípios com maior precipitação acumulada e temperatura mais elevada apresentam maior volume ou perfil diferente de mortalidade?
 # Requisitos atendidos: Req 1,Req 8c,Req 9b.2 .
 # Objetivo: Investigar se municípios com condições climáticas mais extremas (mais chuva, temperaturas mais altas) apresentam padrões de mortalidade diferentes.
+# -----------------------------------------------------------------------------
+# 7) Municípios com maior precipitação acumulada e temperatura mais elevada
+#    apresentam maior volume ou perfil diferente de mortalidade?
+#
+#    Usando as bases dfSUS, dfINMET e dfIBGE, faça a integração entre os dados
+#    de mortalidade e os dados meteorológicos por município.
+#
+#    Para isso, utilize as funções já preparadas no projeto:
+#      - criar_depara_inmet_ibge_sus()
+#      - cruzar_sus_com_inmet()
+#
+#    Armazene o resultado integrado em df_mortalidade_clima.
+#
+#    Em seguida, agrupe os dados por município e calcule:
+#      - total de óbitos não fetais
+#      - precipitação acumulada no município
+#      - temperatura média do município
+#      - idade média dos óbitos
+#
+#    Depois, crie uma coluna PERFIL_CLIMATICO classificando os municípios
+#    conforme precipitação acumulada e temperatura média:
+#
+#      - 'Mais chuvoso e mais quente'
+#            quando a precipitação acumulada for acima da mediana
+#            E a temperatura média for acima da mediana
+#
+#      - 'Mais chuvoso e menos quente'
+#            quando a precipitação acumulada for acima da mediana
+#            E a temperatura média for menor ou igual à mediana
+#
+#      - 'Menos chuvoso e mais quente'
+#            quando a precipitação acumulada for menor ou igual à mediana
+#            E a temperatura média for acima da mediana
+#
+#      - 'Menos chuvoso e menos quente'
+#            quando a precipitação acumulada for menor ou igual à mediana
+#            E a temperatura média for menor ou igual à mediana
+#
+#    Mostre:
+#      - a tabela agregada por município
+#      - os 10 municípios com maior precipitação acumulada
+#      - os 10 municípios com maior temperatura média
+#      - a média de óbitos e a idade média dos óbitos por PERFIL_CLIMATICO
+#
+#    Por fim, faça um pd.crosstab estruturado entre:
+#      index = [PERFIL_CLIMATICO, município]
+#      columns = grupo de causa de morte
+#      values = IDADE_ANOS
+#      aggfunc = 'mean'
+#
+#    Requisitos atendidos:
+#      Req 1    - Integração/concatenação entre bases
+#      Req 8c   - Agrupamento estruturado com mais de uma variável
+#      Req 9b.2 - Cruzamento estruturado com medida de outra variável
+#
+#    Objetivo:
+#      Investigar se municípios com condições climáticas mais extremas,
+#      como maior precipitação acumulada e temperatura média mais elevada,
+#      apresentam maior volume de óbitos ou perfil diferente de mortalidade.
+# -----------------------------------------------------------------------------
+
+print('\n7 — Mortalidade em municípios com maior chuva acumulada e maior temperatura')
+
+# SEU CÓDIGO AQUI

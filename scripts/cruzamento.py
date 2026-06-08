@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def normaliza_municipio(serie):
-    """Remove acentos, espaços e padroniza para maiúsculo."""
+    #Remove acentos, espaços e padroniza para maiúsculo.
     return (
         serie.astype(str)
              .str.normalize("NFKD")
@@ -13,38 +13,19 @@ def normaliza_municipio(serie):
     )
 
 
-def conectar_sus_inmet_via_ibge(df_sus, df_ibge, df_inmet,
-                                 coluna_cod_sus="CODMUNRES"):
+def conectar_sus_inmet_via_ibge(df_sus, df_ibge, df_inmet,coluna_cod_sus="CODMUNRES"):
     """
     Conecta as três bases com o IBGE como ponte:
 
-        SUS ──(código 6 dig)──► IBGE ──(nome + UF)──► INMET
+        SUS (código 6 dig) -> IBGE (nome + UF) -> INMET
 
-    Parâmetros
-    ----------
-    df_sus         : registros de óbito (SIM)
-    df_ibge        : cadastro municipal do IBGE
-    df_inmet       : medições meteorológicas do INMET
-    coluna_cod_sus : coluna do SUS com código do município
-                     use 'CODMUNRES'  para município de residência
-                     use 'CODMUNOCOR' para município de ocorrência
-
-    Retorna
-    -------
-    DataFrame com cada registro do SUS enriquecido com:
-      - Nome_Município e UF             (IBGE)
-      - municipio_inmet                 (INMET)
-      - Data Medicao                    (INMET)
-      - temp_media, precip_media,
-        umidade_media                   (INMET — por município e data)
     """
 
     sus   = df_sus.copy()
     ibge  = df_ibge.copy()
     inmet = df_inmet.copy()
 
-    # ── PASSO 1: preparar IBGE ───────────────────────────────────────────
-    # 7 dígitos → 6 dígitos (remove o dígito verificador)
+    # 7 dígitos -> 6 dígitos (remove o dígito verificador)
     ibge["cod_6dig"] = (
         ibge["Código Município Completo"]
         .astype(str).str.replace(".0", "", regex=False)
@@ -58,7 +39,6 @@ def conectar_sus_inmet_via_ibge(df_sus, df_ibge, df_inmet,
     else:
         ibge["UF"] = ibge["UF"].str.strip().str.upper()
 
-    # ── PASSO 2: preparar INMET com datas e valores numéricos ────────────
     inmet["municipio_norm"] = normaliza_municipio(inmet["municipio_inmet"])
     inmet["UF"]             = inmet["UF"].str.strip().str.upper()
 
@@ -94,7 +74,6 @@ def conectar_sus_inmet_via_ibge(df_sus, df_ibge, df_inmet,
         )
     )
 
-    # ── PASSO 3: preparar SUS com data do óbito ──────────────────────────
     sus["cod_municipio_6dig"] = (
         sus[coluna_cod_sus]
         .astype(str).str.replace(".0", "", regex=False)
@@ -106,7 +85,7 @@ def conectar_sus_inmet_via_ibge(df_sus, df_ibge, df_inmet,
     sus["DTOBITO"] = pd.to_datetime(sus["DTOBITO"], format="%d%m%Y", errors="coerce")
     sus["DTOBITO_date"] = sus["DTOBITO"].dt.normalize()
 
-    # ── PASSO 4: SUS × INMET por código de município e data ─────────────
+    #SUS x INMET por código de município e data
     df_completo = sus.merge(
         inmet_por_dia[[
             "cod_6dig", "Data Medicao", "Data Medicao_date",

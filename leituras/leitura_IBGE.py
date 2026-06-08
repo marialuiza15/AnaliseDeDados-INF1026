@@ -4,9 +4,8 @@ import pandas as pd
 import os
 
 def junta_ibge():
-    """
-    Lê arquivo IBGE (Excel .xls) com dados de estruturas territoriais brasileiras
-    """
+    #Lê arquivo IBGE (Excel .xls) com dados de estruturas territoriais brasileiras
+    
     df_completo = None
     
     for arquivo in sorted(os.listdir(ibge_path)):

@@ -161,11 +161,13 @@ df_completo_4['temp_media'] = df_completo_4['temp_media'].astype(float)
 df_completo_4['precip_media'] = df_completo_4['precip_media'].astype(float)
 df_completo_4['umidade_media'] = df_completo_4['umidade_media'].astype(float)
 
+df_completo_4['FAIXA_UMIDADE'] = pd.cut(df_completo_4['umidade_media'], bins=4)
+
 resumo_rj = df_completo_4.groupby('municipio_inmet').agg({
     'temp_media': 'mean',
     'precip_media': 'mean',
     'umidade_media': 'mean'
-})
+}).sort_values(by='temp_media', ascending=False)
 
 print("\nTemperatura, precipitação acumulada e umidade relativa entre os municípios do INMET no RJ:\n")
 print(resumo_rj)
@@ -208,6 +210,11 @@ tabela_temp_estruturada = pd.crosstab(
 tabela_chuva_municipio["Chuva forte ou muito forte"] = (
     tabela_chuva_municipio.get("Chuva forte", 0) +
     tabela_chuva_municipio.get("Chuva muito forte", 0)
+)
+
+tabela_chuva_municipio = tabela_chuva_municipio.sort_values(
+    by="Chuva forte ou muito forte", 
+    ascending=False
 )
 
 freq_FAIXA_CHUVA = (df_completo_5["FAIXA_CHUVA"].value_counts(normalize=True) * 100).round(2)

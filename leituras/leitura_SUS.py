@@ -4,9 +4,8 @@ import pandas as pd
 import os
 
 def junta_sus():
-    """
-    Lê arquivos CSV de dados de saúde (SUS) da pasta dados/SUS/
-    """
+    #Lê arquivos CSV de dados de saúde (SUS) da pasta dados/SUS/
+    
     df_completo = None
     dfs_lista = []
     

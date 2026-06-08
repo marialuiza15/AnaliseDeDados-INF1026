@@ -72,21 +72,6 @@ mapa_raca = {
     "9": "Ignorado"
 }
 
-df_completo_1["FAIXA_ETARIA"].value_counts().plot(
-    kind="bar",
-    figsize=(10, 6),
-    title="Óbitos não fetais por faixa etária - RJ, 2024"
-)
-
-plt.xlabel("Faixa etária", fontsize=14)
-plt.ylabel("Quantidade de óbitos", fontsize=14)
-plt.title("Óbitos não fetais por faixa etária - RJ, 2024", fontsize=16)
-
-plt.xticks(rotation=45, fontsize=12)
-plt.yticks(fontsize=12)
-
-plt.tight_layout()
-plt.show()
 
 df_exibe = df_completo_1.groupby(['FAIXA_ETARIA', 'SEXO_DESC', 'RACA_DESC']).agg({
     'SEXO_DESC': 'count',
@@ -98,6 +83,37 @@ df_exibe = df_completo_1.groupby(['FAIXA_ETARIA', 'SEXO_DESC', 'RACA_DESC']).agg
 print("Perfil dos óbitos não fetais no RJ em 2024:\n", df_exibe)
 print("o total de óbitos não fetais: ",df_completo_1.shape[0])
 
+# Garante que SEXO_DESC existe no subconjunto
+df_completo_1["SEXO_DESC"] = df_completo_1["SEXO"].map(sexo_dic)
+
+# Tabela: faixa etária x sexo
+grafico_faixa_sexo = pd.crosstab(
+    index=df_completo_1["FAIXA_ETARIA"],
+    columns=df_completo_1["SEXO_DESC"]
+)
+
+# Ordena as colunas na ordem desejada
+grafico_faixa_sexo = grafico_faixa_sexo.reindex(
+    columns=["Feminino", "Masculino", "Ignorado"],
+    fill_value=0
+)
+
+# Gráfico de barras agrupadas
+grafico_faixa_sexo.plot(
+    kind="bar",
+    figsize=(11, 6)
+)
+
+plt.title("Óbitos não fetais por faixa etária e sexo - RJ, 2024", fontsize=16)
+plt.xlabel("Faixa etária", fontsize=14)
+plt.ylabel("Quantidade de óbitos", fontsize=14)
+
+plt.xticks(rotation=45, ha="right", fontsize=12)
+plt.yticks(fontsize=12)
+
+plt.legend(title="Sexo")
+plt.tight_layout()
+plt.show()
 # 2- Quais são os grupos de causa de morte mais frequentes e como se distribuem entre homens e mulheres?
 # Requisitos atendidos: Req 3,Req 5.3,Req 6b,Req 9a.1.
 # Objetivo: Identificar as causas que lideram a mortalidade no RJ e verificar se há diferença na frequência entre homens e mulheres.

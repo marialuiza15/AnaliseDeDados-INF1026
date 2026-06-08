@@ -35,7 +35,7 @@ def conectar_sus_inmet_via_ibge(df_sus, df_ibge, df_inmet,
       - Nome_Município e UF             (IBGE)
       - municipio_inmet                 (INMET)
       - Data Medicao                    (INMET)
-      - temp_media, precip_total,
+      - temp_media, precip_media,
         umidade_media                   (INMET — por município e data)
     """
 
@@ -89,7 +89,7 @@ def conectar_sus_inmet_via_ibge(df_sus, df_ibge, df_inmet,
         .agg(
             **{"Data Medicao": ("Data Medicao", "first")},
             temp_media         = ("temp_float", "mean"),
-            precip_total       = ("precip_float", "sum"),
+            precip_media       = ("precip_float", "mean"),
             umidade_media      = ("umidade_float", "mean"),
         )
     )
@@ -111,7 +111,7 @@ def conectar_sus_inmet_via_ibge(df_sus, df_ibge, df_inmet,
         inmet_por_dia[[
             "cod_6dig", "Data Medicao", "Data Medicao_date",
             "municipio_inmet", "UF",
-            "temp_media", "precip_total", "umidade_media"
+            "temp_media", "precip_media", "umidade_media"
         ]],
         left_on=["cod_municipio_6dig", "DTOBITO_date"],
         right_on=["cod_6dig", "Data Medicao_date"],

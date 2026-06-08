@@ -421,6 +421,7 @@ print('==============================================')
 print('\n3.a — FAIXA_ETARIA com pd.cut')
 # SEU CÓDIGO AQUI
 
+<<<<<<< HEAD
 bins = [0,14,29,59,79,120]
 labels = ['Criança/Adolescente','Jovem','Adulto','Idoso','Muito idoso']
 
@@ -432,7 +433,18 @@ freq.plot(kind='bar')
 plt.show()
 
 print(freq)
+=======
+# # SEU CÓDIGO AQUI
+dfSUS["FAIXA_ETARIA"]=pd.cut(
+    dfSUS["IDADE_ANOS"],
+    bins=[0,14,29,59,79,120],
+    labels=['Criança/Adolescente','Jovem','Adulto','Idoso','Muito idoso'],
+    include_lowest=True
+)
+>>>>>>> 54d323d5bd0f10c2d5c3ab776cb790eb8e1f4b4c
 
+print("freqiuencia absoluta da faixa etaria: ", dfSUS["FAIXA_ETARIA"].value_counts())
+dfSUS["FAIXA_ETARIA"].value_counts().plot(kind='bar')
 
 # # -----------------------------------------------------------------------------
 # # 3.b) Em dfSUS, crie a coluna GRUPO_CAUSA classificando CAUSABAS pelo
@@ -454,6 +466,7 @@ print(freq)
 print('\n3.b — GRUPO_CAUSA e crosstab por sexo')
 # SEU CÓDIGO AQUI
 
+<<<<<<< HEAD
 def classifica_causa(cid):
     c = cid[0]
     if c=='I':
@@ -474,6 +487,34 @@ dfSUS['GRUPO_CAUSA'] = dfSUS['CAUSABAS'].apply(classifica_causa)
 df = pd.crosstab(dfSUS['GRUPO_CAUSA'], dfSUS['SEXO_DESC'])
 
 print(df.head(3))
+=======
+# # SEU CÓDIGO AQUI
+def classifica_causa(cid):
+    cid=str(cid).upper()
+
+    if cid.startswith("U07"):
+        return 'COVID-19'
+    elif cid.startswith("I"):
+        return 'Doenças circulatórias'
+    elif cid.startswith("J"):
+        return 'Doenças respiratórias'
+    elif cid.startswith("C") or cid[:2] in ["D0", "D1", "D2", "D3", "D4"]:
+        return 'Neoplasias'
+    elif cid[0] in ["V", "W", "X", "Y"]:
+        return "Causas externas"
+    else:
+        return "Outras causas"
+
+
+dfSUS["GRUPO_CAUSA"]=dfSUS["CAUSABAS"].apply(classifica_causa)
+
+saida=pd.crosstab(
+    dfSUS["GRUPO_CAUSA"],
+    dfSUS["SEXO_DESC"],
+    margins=True
+)
+print(saida)
+>>>>>>> 54d323d5bd0f10c2d5c3ab776cb790eb8e1f4b4c
 
 # # -----------------------------------------------------------------------------
 # # 3.c) Filtrando apenas óbitos NÃO FETAIS (TIPOBITO == '2'):
@@ -491,6 +532,7 @@ print(df.head(3))
 print('\n3.c — Causas, local e idade nos óbitos não fetais')
 # SEU CÓDIGO AQUI
 
+<<<<<<< HEAD
 cond = dfSUS['TIPOBITO'] == '2'
 
 df_naofetais = dfSUS.loc[cond]
@@ -509,6 +551,13 @@ df = dfSUS.groupby('LOCAL_DESC').agg({
 }).sort_values(by='IDADE_ANOS', ascending=False)
 
 print(df)
+=======
+# # SEU CÓDIGO AQUI
+filtro=dfSUS[dfSUS["TIPOBITO"] == "2"]
+print(filtro["CAUSABAS"].value_counts().head(10))
+filtro["LOCAL_DESC"].value_counts().plot(kind="barh")
+filtro.groupby("LOCAL_DESC")["IDADE_ANOS"].mean().sort_values(ascending=False)
+>>>>>>> 54d323d5bd0f10c2d5c3ab776cb790eb8e1f4b4c
 
 # # =============================================================================
 # # QUESTÃO 4 — Integração entre bases de dados

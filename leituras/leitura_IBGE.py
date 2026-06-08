@@ -8,9 +8,9 @@ def junta_ibge():
     
     df_completo = None
     
-    for arquivo in sorted(os.listdir(ibge_path)):
+    for arquivo in sorted(os.listdir('dados/IBGE/')):
         if arquivo.endswith('.xls') or arquivo.endswith('.xlsx'):
-            caminho_completo = os.path.join(ibge_path, arquivo)
+            caminho_completo = os.path.join('dados/IBGE/', arquivo)
             try:
                 df = pd.read_excel(caminho_completo, sheet_name=0, skiprows=6)
         

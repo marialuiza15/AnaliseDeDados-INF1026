@@ -10,13 +10,13 @@ def junta_sus():
     dfs_lista = []
     
     # Verificar se a pasta existe
-    if not os.path.exists(saude_path):
-        print(f'Pasta {saude_path} não encontrada.')
+    if not os.path.exists('dados/SUS/'):
+        print(f'Pasta {'dados/SUS/'} não encontrada.')
         return None
     
-    for arquivo in sorted(os.listdir(saude_path)):
+    for arquivo in sorted(os.listdir('dados/SUS/')):
         if arquivo.endswith('.csv'):
-            caminho_completo = os.path.join(saude_path, arquivo)
+            caminho_completo = os.path.join('dados/SUS/', arquivo)
             try:
                 df = pd.read_csv(caminho_completo,sep=';',dtype=str,low_memory=False)
                 # Remove colunas vazias (Unnamed)

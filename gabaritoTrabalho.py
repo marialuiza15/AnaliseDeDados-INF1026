@@ -340,3 +340,96 @@ print("\nDistribuição mensal de 2024 — doenças circulatórias:\n", freq_doe
 print("\nDistribuição mensal de 2024 — doenças respiratórias:\n", freq_doencas_resp)
 
 print("\n-----------------------------------------------------")
+
+
+# =============================================================================
+# QUESTÃO 9
+# =============================================================================
+
+print("\n-----------------------------------------------------")
+print("\n 9 - Como a temperatura e a umidade variam ao longo dos meses de 2024, "
+      "e os óbitos por causas respiratórias se concentram nos períodos de maior amplitude térmica? \n")
+print("\n-----------------------------------------------------")
+
+df_completo_9 = df_completo_8.copy()
+
+for col_num in ['temp_media', 'umidade_media', 'precip_media']:
+    mediana_global = df_completo_9[col_num].median()
+    df_completo_9[col_num] = df_completo_9[col_num].fillna(mediana_global)
+
+for col_cat in ['GRUPO_CAUSA', 'LOCAL_DESC']:
+    moda_col = df_completo_9[col_cat].mode()[0]
+    df_completo_9[col_cat] = df_completo_9[col_cat].fillna(moda_col)
+
+print("Ausentes após fillna numérico (mediana global):",
+      df_completo_9[['temp_media', 'umidade_media', 'precip_media']].isna().sum().to_dict())
+print("Ausentes após fillna categórico (moda):",
+      df_completo_9[['GRUPO_CAUSA', 'LOCAL_DESC']].isna().sum().to_dict())
+
+amplitude_mensal = (
+    df_completo_9
+    .groupby(['municipio_inmet', 'MES_INMET'])['temp_media']
+    .agg(amplitude=lambda x: x.max() - x.min())
+    .reset_index()
+).sort_values(by='amplitude', ascending=False)
+
+idx_segundo_semestre = amplitude_mensal[amplitude_mensal['MES_INMET'] >= 7].index
+segundo_semestre = amplitude_mensal.loc[idx_segundo_semestre]
+
+print("\nPrimeiras 10 linhas da amplitude térmica no 2º semestre (via .iloc):")
+print(segundo_semestre[['municipio_inmet', 'MES_INMET', 'amplitude']].iloc[0:10])
+
+amplitude_por_mes = amplitude_mensal.groupby('MES_INMET')['amplitude'].mean().round(2)
+
+limiar_amplitude   = amplitude_por_mes.median()
+meses_alta_amplitude = amplitude_por_mes[amplitude_por_mes > limiar_amplitude].index.tolist()
+
+df_resp = df_completo_9[df_completo_9['GRUPO_CAUSA'] == 'Doenças respiratórias'].copy()
+df_resp['ALTA_AMPLITUDE'] = df_resp['MES_INMET'].isin(meses_alta_amplitude)
+
+obitos_por_amplitude = df_resp.groupby('ALTA_AMPLITUDE')['MES_INMET'].count()
+obitos_por_amplitude.index = obitos_por_amplitude.index.map(
+    {True: 'Meses de alta amplitude térmica', False: 'Demais meses'}
+)
+
+print("\nÓbitos respiratórios por período:\n", obitos_por_amplitude)
+
+print("\n-----------------------------------------------------")
+
+
+# =============================================================================
+# QUESTÃO 10
+# =============================================================================
+
+print("\n-----------------------------------------------------")
+print("\n 10 - Qual é o perfil mensal dos óbitos por causa e sexo ao longo de 2024, "
+      "e qual temperatura média caracteriza cada combinação mês a mês? \n")
+print("\n-----------------------------------------------------")
+
+df_completo_10 = df_completo_9.copy()
+
+trimestre_map = {1:'T1-Verão', 2:'T1-Verão', 3:'T2-Outono',
+                 4:'T2-Outono', 5:'T2-Outono', 6:'T3-Inverno',
+                 7:'T3-Inverno', 8:'T3-Inverno', 9:'T4-Primavera',
+                 10:'T4-Primavera', 11:'T4-Primavera', 12:'T1-Verão'}
+df_completo_10['TRIMESTRE'] = df_completo_10['MES_INMET'].map(trimestre_map)
+
+crosstab_contagem = pd.crosstab(
+    index=[df_completo_10['GRUPO_CAUSA'], df_completo_10['SEXO_DESC']],
+    columns=df_completo_10['TRIMESTRE']
+)
+
+print("Crosstab estruturado — contagem de óbitos por [GRUPO_CAUSA x SEXO] e trimestre/estação:\n")
+print(crosstab_contagem)
+
+crosstab_temp = pd.crosstab(
+    index=[df_completo_10['GRUPO_CAUSA'], df_completo_10['SEXO_DESC']],
+    columns=df_completo_10['TRIMESTRE'],
+    values=df_completo_10['temp_media'],
+    aggfunc='mean'
+).round(2)
+
+print("\nCrosstab estruturado — temperatura média (°C) por [GRUPO_CAUSA x SEXO] e trimestre/estação:\n")
+print(crosstab_temp)
+
+print("\n-----------------------------------------------------")

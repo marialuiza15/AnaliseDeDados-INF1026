@@ -28,7 +28,7 @@ def limpar_municipio_inmet(regiao):
 def junta_clima():
     dfs_lista = []
 
-    for arquivo in sorted(os.listdir(inmet_path)):
+    for arquivo in sorted(os.listdir('dados/INMET/')):
         if arquivo.endswith('.csv'):
             nome_sem_extensao = arquivo[:-4]
             partes = nome_sem_extensao.split('_', 1)
@@ -42,7 +42,7 @@ def junta_clima():
 
             municipio_inmet = limpar_municipio_inmet(regiao)
 
-            caminho_completo = os.path.join(inmet_path, arquivo)
+            caminho_completo = os.path.join('dados/INMET/', arquivo)
 
             try:
                 df = pd.read_csv(

@@ -72,7 +72,20 @@ mapa_raca = {
     "9": "Ignorado"
 }
 
-df_completo_1["FAIXA_ETARIA"].value_counts().plot(kind='bar')
+df_completo_1["FAIXA_ETARIA"].value_counts().plot(
+    kind="bar",
+    figsize=(10, 6),
+    title="Óbitos não fetais por faixa etária - RJ, 2024"
+)
+
+plt.xlabel("Faixa etária", fontsize=14)
+plt.ylabel("Quantidade de óbitos", fontsize=14)
+plt.title("Óbitos não fetais por faixa etária - RJ, 2024", fontsize=16)
+
+plt.xticks(rotation=45, fontsize=12)
+plt.yticks(fontsize=12)
+
+plt.tight_layout()
 plt.show()
 
 df_exibe = df_completo_1.groupby(['FAIXA_ETARIA', 'SEXO_DESC', 'RACA_DESC']).agg({
@@ -114,7 +127,20 @@ df_2 = pd.crosstab(df_completo_2['GRUPO_CAUSA'], df_completo_2['SEXO_DESC'])
 
 print("grupos de causa de morte mais frequentes:\n", frequencias)
 print("\nDistribuição entre homens e mulheres:\n", df_2)
+frequencias.sort_values(ascending=True).plot(
+    kind="barh",
+    figsize=(10, 6)
+)
 
+plt.title("Óbitos não fetais por grupo de causa - RJ, 2024", fontsize=16)
+plt.xlabel("Quantidade de óbitos", fontsize=14)
+plt.ylabel("Grupo de causa", fontsize=14)
+
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+
+plt.tight_layout()
+plt.show()
 
 # 3- A média de idade dos óbitos varia por grupo de causa de morte e por sexo?
 # Requisitos atendidos: Req 2,Req 9a.2.
@@ -151,6 +177,26 @@ saidaGroup=df_completo_3.groupby("GRUPO_CAUSA")["IDADE_ANOS"].mean().sort_values
 print("a MÉDIA de IDADE_ANOS para cada combinação entre grupo de causa de morte e sexo:\n ",saidaCross)
 print("média geral de IDADE_ANOS por GRUPO_CAUSA ordenada da maior para a menor média\n ",saidaGroup)
 
+ordem_sexo = ["Feminino", "Masculino", "Ignorado"]
+
+saidaCross_ordenado = saidaCross[ordem_sexo]
+
+saidaCross_ordenado.round(2).plot(
+    kind="bar",
+    figsize=(11, 6)
+)
+
+plt.title("Média de idade dos óbitos por grupo de causa e sexo - RJ, 2024", fontsize=16)
+plt.xlabel("Grupo de causa de morte", fontsize=14)
+plt.ylabel("Média de idade dos óbitos", fontsize=14)
+
+plt.xticks(rotation=45, ha="right", fontsize=12)
+plt.yticks(fontsize=12)
+
+plt.legend(title="Sexo")
+plt.tight_layout()
+plt.show()
+
 # 4- Como variam temperatura, precipitação acumulada e umidade relativa entre os municípios do INMET no RJ?
 # Requisitos atendidos: Req 3,Req 5.1,Req 7.1,Req 8b.
 # Objetivo: Caracterizar o perfil climático dos municípios fluminenses e verificar a existência de correlação entre temperatura e precipitação.
@@ -166,9 +212,27 @@ resumo_rj = df_completo_4.groupby('municipio_inmet').agg({
     'precip_media': 'mean',
     'umidade_media': 'mean'
 })
+correlacao_temp_precip = resumo_rj["temp_media"].corr(resumo_rj["precip_media"])
 
 print("\nTemperatura, precipitação acumulada e umidade relativa entre os municípios do INMET no RJ:\n")
 print(resumo_rj)
+print("\nCorrelação entre temperatura média e precipitação média:")
+print(round(correlacao_temp_precip, 2))
+
+resumo_rj["temp_media"].sort_values().plot(
+    kind="barh",
+    figsize=(10, 8)
+)
+
+plt.title("Temperatura média por município do INMET - RJ", fontsize=16)
+plt.xlabel("Temperatura média (°C)", fontsize=14)
+plt.ylabel("Município", fontsize=14)
+
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=10)
+
+plt.tight_layout()
+plt.show()
 
 # 5- Como se distribui a intensidade das chuvas diárias por município e qual é a temperatura média associada a cada nível de precipitação?
 # Requisitos atendidos: Req 4b,Req 6b,Req 9b.2.
@@ -218,6 +282,21 @@ print("\nFrequência percentual geral de FAIXA_CHUVA:\n", freq_FAIXA_CHUVA)
 print("\nTemperatura média por faixa de chuva:\n", temp_med_FAIXA_CHUVA)
 print("\nTemperatura média por município e faixa de chuva:\n", tabela_temp_estruturada)
 
+tabela_chuva_municipio["Chuva forte ou muito forte"].sort_values().plot(
+    kind="barh",
+    figsize=(10, 8)
+)
+
+plt.title("Proporção de dias com chuva forte ou muito forte por município - RJ", fontsize=16)
+plt.xlabel("Percentual de dias (%)", fontsize=14)
+plt.ylabel("Município", fontsize=14)
+
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=10)
+
+plt.tight_layout()
+plt.show()
+
 # 6- Qual é o perfil racial e de sexo dos óbitos domiciliares de pessoas com mais de 79 anos, excluindo causas externas?
 # Requisitos atendidos: Req 5.3,Req 5.4,Req 7.2,Req 9b.1.
 # Objetivo: Identificar vulnerabilidades específicas da população muito idosa que falece em domicílio, investigando quais grupos raciais e de sexo são mais afetados por cada tipo de causa.
@@ -234,6 +313,26 @@ raca_sexo = demais_causa_79_local.groupby(['RACA_DESC', 'SEXO_DESC'])['CODMUNRES
 
 print("\nPerfil racial e de sexo dos óbitos domiciliares de pessoas com mais de 79 anos, excluindo causas externas:\n")
 print(raca_sexo)
+raca_sexo_tabela = raca_sexo.unstack(fill_value=0)
+
+raca_sexo_tabela.plot(
+    kind="bar",
+    figsize=(10, 6)
+)
+
+plt.title(
+    "Óbitos domiciliares de pessoas com mais de 79 anos por raça/cor e sexo",
+    fontsize=16
+)
+plt.xlabel("Raça/cor", fontsize=14)
+plt.ylabel("Quantidade de óbitos", fontsize=14)
+
+plt.xticks(rotation=45, ha="right", fontsize=12)
+plt.yticks(fontsize=12)
+
+plt.legend(title="Sexo")
+plt.tight_layout()
+plt.show()
 
 # 7- Municípios com maior precipitação acumulada e temperatura mais elevada apresentam maior volume ou perfil diferente de mortalidade?
 # Requisitos atendidos: Req 1,Req 8c,Req 9b.2 .
@@ -260,6 +359,28 @@ df_analise_final = pd.concat([df_maior_precip, df_volume_mort, perfil_causa], ax
 print("Municípios com maior precipitação acumulada e temperatura mais elevada apresentam maior volume ou perfil diferente de mortalidade?")
 print(df_analise_final)
 
+top10_precip = df_analise_final.sort_values(
+    by="precip_media",
+    ascending=False
+).head(10)
+
+top10_precip["Total_Obitos"].plot(
+    kind="bar",
+    figsize=(12, 6)
+)
+
+plt.title(
+    "Total de óbitos nos 10 municípios com maior precipitação acumulada - RJ",
+    fontsize=16
+)
+plt.xlabel("Municípios ordenados da maior para a menor precipitação", fontsize=14)
+plt.ylabel("Total de óbitos", fontsize=14)
+
+plt.xticks(rotation=45, ha="right", fontsize=10)
+plt.yticks(fontsize=12)
+
+plt.tight_layout()
+plt.show()
 
 # 8- Como a mortalidade por doenças respiratórias e circulatórias se distribui ao longo dos meses de 2024 e existe sazonalidade nesse padrão?
 # Requisitos atendidos: Req 5.3,Req 8c,Req 9a.1,Req 7.
@@ -279,3 +400,38 @@ freq_doencas_resp = df_completo_8_resp['MES_INMET'].value_counts()
 
 print("\nDistribuição ao longo dos meses de 2024 para doenças circulatórias:\n", freq_doencas_circ)
 print("\nDistribuição ao longo dos meses de 2024 para doenças respiratórias:\n", freq_doencas_resp)
+plt.figure(figsize=(10, 6))
+
+freq_doencas_circ.sort_index().plot(
+    kind="line",
+    marker="o",
+    label="Doenças circulatórias"
+)
+
+freq_doencas_resp.sort_index().plot(
+    kind="line",
+    marker="o",
+    label="Doenças respiratórias"
+)
+
+plt.title(
+    "Distribuição mensal de óbitos por doenças circulatórias e respiratórias - RJ, 2024",
+    fontsize=16
+)
+plt.xlabel("Mês", fontsize=14)
+plt.ylabel("Quantidade de óbitos", fontsize=14)
+
+plt.xticks(
+    ticks=range(1, 13),
+    labels=[
+        "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+        "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+    ],
+    fontsize=12
+)
+
+plt.yticks(fontsize=12)
+plt.legend(title="Grupo de causa")
+
+plt.tight_layout()
+plt.show()
